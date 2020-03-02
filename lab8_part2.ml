@@ -121,9 +121,9 @@ module MakeStack (Element: SERIALIZE)  :(STACK with type element = Element.t) =
       List.fold_left f init s
 
     let serialize (s : stack) : string =
-      let open Element in
-      let el, s2 = pop_helper s in
-      (List.fold_right (fun x a -> a ^ (serialize x) ^ ":") s2 "") ^ (serialize el)
+      let string_join x y = Element.serialize y
+                  ^ (if x <> "" then ":" ^ x else "") in
+      fold_left string_join "" s
   end ;;
 
 (*......................................................................
@@ -153,11 +153,12 @@ For this oversimplified serialization function, you may assume that
 the string will be made up of alphanumeric characters only.
 ......................................................................*)
 
-module IntStringStack =  MakeStack
-                          (struct
-                            type t = int * string
-                            let serialize (n, st) = "(" ^ (string_of_int n) ^
-                                                    ", '" ^ st ^ "')"
-                          end) ;;
+module IntStringSerialize =
+  struct
+    type t = (int * string)
+    let serialize (n, s) =
+      "(" ^ string_of_int n ^ ",'" ^ s ^ "')"
+  end ;;
 
-
+module IntStringStack =
+  MakeStack(IntStringSerialize) ;;
